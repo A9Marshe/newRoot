@@ -25,7 +25,18 @@ export default function PlacementPage() {
     );
   }
 
-  const exercises = placementLesson.content_json.exercises;
+  const exercises = placementLesson.content_json.exercises || [];
+  
+  if (exercises.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f0f7f4] dark:bg-[#0a1a14] font-sans">
+        <p className="text-xl text-[#4a7c66] dark:text-[#a3d9be]">
+          لا توجد تمارين في هذا الاختبار
+        </p>
+      </div>
+    );
+  }
+
   const currentEx = exercises[currentExIndex];
   const totalExercises = exercises.length;
   const progress = ((currentExIndex + 1) / totalExercises) * 100;
@@ -62,7 +73,7 @@ export default function PlacementPage() {
             {placementLesson.title_ar}
           </h1>
           <p className="text-[#4a7c66] dark:text-[#a3d9be]">
-            تمرين {currentExIndex + 1} من {totalExercises}
+            {currentEx ? `تمرين ${currentExIndex + 1} من ${totalExercises}` : ''}
           </p>
         </header>
 
@@ -77,13 +88,14 @@ export default function PlacementPage() {
           </div>
         </div>
 
-        <div key={currentExIndex}>
-          <Card className="border-[#d1e7dd] dark:border-[#2d6a56] shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl text-[#1a3c34] dark:text-[#b8e6d0]">
-                {currentEx.question_ar}
-              </CardTitle>
-            </CardHeader>
+        {currentEx && (
+          <div key={currentExIndex}>
+            <Card className="border-[#d1e7dd] dark:border-[#2d6a56] shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-xl text-[#1a3c34] dark:text-[#b8e6d0]">
+                  {currentEx.question_ar}
+                </CardTitle>
+              </CardHeader>
             <CardContent className="flex flex-col gap-4">
               {currentEx.type === "mcq" && currentEx.options_ar ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -142,7 +154,8 @@ export default function PlacementPage() {
               )}
             </CardContent>
           </Card>
-        </div>
+          </div>
+        )}
       </main>
     </div>
   );

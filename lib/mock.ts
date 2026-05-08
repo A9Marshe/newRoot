@@ -50,6 +50,234 @@ export type StudentProgress = {
   completed_at: Date;
 };
 
+export type Achievement = {
+  id: string;
+  title: string;
+  title_ar: string;
+  icon: string;
+  description: string;
+  description_ar: string;
+  condition: (stats: StudentStats) => boolean;
+};
+
+export type SkillStrength = {
+  category: string;
+  category_ar: string;
+  score: number; // 0-100
+};
+
+export type DailyActivity = {
+  day: string;
+  day_ar: string;
+  xp: number;
+};
+
+export type SyrianCity = {
+  id: string;
+  name: string;
+  name_ar: string;
+  description: string;
+  description_ar: string;
+  unlocked: boolean;
+  landmark: string;
+};
+
+export type StudentStats = {
+  student_id: string;
+  streak_days: number;
+  last_activity_date: string | null;
+  achievements: string[];
+  level_title: string;
+  level_title_ar: string;
+  skills: SkillStrength[];
+  weekly_activity: DailyActivity[];
+  discovered_cities: string[];
+};
+
+export type Story = {
+  id: string;
+  title: string;
+  title_ar: string;
+  content: string;
+  content_ar: string;
+  category: "history" | "legend" | "culture";
+  imageUrl: string;
+  location: string;
+};
+
+export const levelTitles = [
+  { minXP: 0, title: "مبتدئ", title_ar: "مبتدئ" },
+  { minXP: 100, title: "متميز", title_ar: "متميز" },
+  { minXP: 300, title: "نجم", title_ar: "نجم" },
+  { minXP: 600, title: "بطل", title_ar: "بطل" },
+  { minXP: 1000, title: "أستاذ", title_ar: "أستاذ" },
+];
+
+export const getLevelTitle = (xp: number): { title: string; title_ar: string } => {
+  for (let i = levelTitles.length - 1; i >= 0; i--) {
+    if (xp >= levelTitles[i].minXP) {
+      return { title: levelTitles[i].title, title_ar: levelTitles[i].title_ar };
+    }
+  }
+  return { title: "مبتدئ", title_ar: "مبتدئ" };
+};
+
+export const allAchievements: Achievement[] = [
+  {
+    id: "first-lesson",
+    title: "First Lesson",
+    title_ar: "أول درس",
+    icon: "🌟",
+    description: "Complete your first lesson",
+    description_ar: "أكمل أول درس لك",
+    condition: (stats) => stats.achievements.length >= 1,
+  },
+  {
+    id: "perfect-score",
+    title: "Perfect Score",
+    title_ar: "النتيجة المثالية",
+    icon: "🎯",
+    description: "Score 100% on any lesson",
+    description_ar: "حصل على 100% في أي درس",
+    condition: () => false,
+  },
+  {
+    id: "streak-3",
+    title: "3-Day Streak",
+    title_ar: "ثلاثة أيام متتالية",
+    icon: "🔥",
+    description: "Learn for 3 consecutive days",
+    description_ar: "تعلم لمدة 3 أيام متتالية",
+    condition: (stats) => stats.streak_days >= 3,
+  },
+  {
+    id: "streak-7",
+    title: "Week Champion",
+    title_ar: "بطل الأسبوع",
+    icon: "⭐",
+    description: "Learn for 7 consecutive days",
+    description_ar: "تعلم لمدة 7 أيام متتالية",
+    condition: (stats) => stats.streak_days >= 7,
+  },
+  {
+    id: "complete-level1",
+    title: "Level Master",
+    title_ar: "سيد المستوى",
+    icon: "👑",
+    description: "Complete all Level 1 lessons",
+    description_ar: "أكمل جميع دروس المستوى الأول",
+    condition: () => false,
+  },
+  {
+    id: "xp-100",
+    title: "XP Collector",
+    title_ar: "جامع النقاط",
+    icon: "💎",
+    description: "Earn 100 XP",
+    description_ar: "اجماع 100 نقطة",
+    condition: (stats) => stats.achievements.length >= 3,
+  },
+  {
+    id: "xp-500",
+    title: "XP Master",
+    title_ar: "أستاذ النقاط",
+    icon: "🏆",
+    description: "Earn 500 XP",
+    description_ar: "اجماع 500 نقطة",
+    condition: (stats) => stats.achievements.length >= 5,
+  },
+  {
+    id: "first-letter",
+    title: "Letter Explorer",
+    title_ar: "مستكشف الحروف",
+    icon: "🔤",
+    description: "Learn your first Arabic letter",
+    description_ar: "تعلم أول حرف عربي",
+    condition: (stats) => stats.achievements.length >= 2,
+  },
+  {
+    id: "jasmine-explorer",
+    title: "Jasmine Explorer",
+    title_ar: "مستكشف الياسمين",
+    icon: "🌼",
+    description: "Discover Damascus",
+    description_ar: "اكتشف مدينة دمشق",
+    condition: (stats) => stats.discovered_cities.includes("damascus"),
+  },
+];
+
+export const syrianCities: SyrianCity[] = [
+  {
+    id: "damascus",
+    name: "Damascus",
+    name_ar: "دمشق",
+    description: "The city of Jasmine and the oldest inhabited capital in the world.",
+    description_ar: "مدينة الياسمين وأقدم عاصمة مأهولة في العالم.",
+    unlocked: true,
+    landmark: "الجامع الأموي",
+  },
+  {
+    id: "aleppo",
+    name: "Aleppo",
+    name_ar: "حلب",
+    description: "Famous for its ancient citadel and vibrant souks.",
+    description_ar: "مشهورة بقلعتها الأثرية وأسواقها النابضة بالحياة.",
+    unlocked: true,
+    landmark: "قلعة حلب",
+  },
+  {
+    id: "homs",
+    name: "Homs",
+    name_ar: "حمص",
+    description: "Known for the Khalid ibn al-Walid Mosque and its central location.",
+    description_ar: "معروفة بجامع خالد بن الوليد وموقعها المركزي.",
+    unlocked: false,
+    landmark: "جامع خالد بن الوليد",
+  },
+  {
+    id: "latakia",
+    name: "Latakia",
+    name_ar: "اللاذقية",
+    description: "Syria's main port city on the Mediterranean coast.",
+    description_ar: "عروس الساحل وأرض الأبجدية الأولى.",
+    unlocked: true,
+    landmark: "أوغاريت",
+  },
+];
+
+export const latakiaStories: Story[] = [
+  {
+    id: "ugarit-alphabet",
+    title: "The First Alphabet",
+    title_ar: "قصة الأبجدية الأولى",
+    category: "history",
+    location: "أوغاريت",
+    imageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=800&auto=format&fit=crop",
+    content: "Ugarit, an ancient city in Latakia, is where the world's first alphabet was born...",
+    content_ar: "في قديم الزمان، وعلى شواطئ مدينة اللاذقية الجميلة، وتحديداً في مملكة أوغاريت، اجتمع الحكماء لاختراع طريقة جديدة للتواصل. بدلاً من الرسوم المعقدة، ابتكروا حروفاً صغيرة وسهلة، لتكون أول أبجدية في تاريخ البشرية. واليوم، كل حرف تكتبه هو حفيد لتلك الحروف التي ولدت في أوغاريت.",
+  },
+  {
+    id: "latakia-port",
+    title: "The Friendly Sea",
+    title_ar: "البحر الصديق وميناء الأمان",
+    category: "culture",
+    location: "ميناء اللاذقية",
+    imageUrl: "https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=800&auto=format&fit=crop",
+    content: "The sea has always been a friend to the people of Latakia, bringing treasures and stories from far away...",
+    content_ar: "منذ آلاف السنين، وأهالي اللاذقية ينظرون إلى البحر كصديق وفي. يحكي الأجداد كيف كانت السفن الخشبية تعود محملة بالحرير والتوابل والقصص من بلاد بعيدة. الميناء لم يكن مجرد مكان للسفن، بل كان ملتقى للثقافات، حيث يتعلم الجميع لغات بعضهم البعض بابتسامة ومحبة.",
+  },
+  {
+    id: "roman-arch",
+    title: "The Arch of Triumph",
+    title_ar: "قوس النصر التاريخي",
+    category: "history",
+    location: "حي الصليبة",
+    imageUrl: "https://images.unsplash.com/photo-1590001158193-7904d1ef417a?w=800&auto=format&fit=crop",
+    content: "In the heart of Latakia stands a grand Roman arch, a gate to the past...",
+    content_ar: "في قلب مدينة اللاذقية القديمة، يقف 'قوس النصر' شامخاً منذ العصر الروماني. يروي القوس قصص المهرجانات الكبيرة التي كانت تقام في ساحاته، وكيف كان الأطفال يركضون حول أعمدته الضخمة، واليوم يظل القوس شاهداً على عظمة مدينتنا وجمال تاريخها الذي لا ينسى.",
+  },
+];
+
 // Mock parent profile
 export const mockProfile: Profile = {
   id: "parent-1",
@@ -353,3 +581,69 @@ export const mockProgress: StudentProgress[] = [
     completed_at: new Date("2026-02-02"),
   },
 ];
+
+// Mock student stats (gamification)
+export const mockStudentStats: Record<string, StudentStats> = {
+  "student-1": {
+    student_id: "student-1",
+    streak_days: 3,
+    last_activity_date: "2026-05-08",
+    achievements: ["first-lesson", "first-letter", "xp-100", "jasmine-explorer"],
+    level_title: "متميز",
+    level_title_ar: "متميز",
+    skills: [
+      { category: "Alphabet", category_ar: "الأبجدية", score: 95 },
+      { category: "Vocabulary", category_ar: "المفردات", score: 70 },
+      { category: "Grammar", category_ar: "القواعد", score: 45 },
+      { category: "Pronunciation", category_ar: "النطق", score: 80 },
+    ],
+    weekly_activity: [
+      { day: "Sun", day_ar: "أحد", xp: 50 },
+      { day: "Mon", day_ar: "اثنين", xp: 120 },
+      { day: "Tue", day_ar: "ثلاثاء", xp: 0 },
+      { day: "Wed", day_ar: "أربعاء", xp: 200 },
+      { day: "Thu", day_ar: "خميس", xp: 80 },
+      { day: "Fri", day_ar: "جمعة", xp: 150 },
+      { day: "Sat", day_ar: "سبت", xp: 90 },
+    ],
+    discovered_cities: ["damascus", "aleppo"],
+  },
+  "student-2": {
+    student_id: "student-2",
+    streak_days: 0,
+    last_activity_date: null,
+    achievements: [],
+    level_title: "مبتدئ",
+    level_title_ar: "مبتدئ",
+    skills: [
+      { category: "Alphabet", category_ar: "الأبجدية", score: 20 },
+      { category: "Vocabulary", category_ar: "المفردات", score: 10 },
+      { category: "Grammar", category_ar: "القواعد", score: 5 },
+      { category: "Pronunciation", category_ar: "النطق", score: 15 },
+    ],
+    weekly_activity: [
+      { day: "Sun", day_ar: "أحد", xp: 0 },
+      { day: "Mon", day_ar: "اثنين", xp: 0 },
+      { day: "Tue", day_ar: "ثلاثاء", xp: 0 },
+      { day: "Wed", day_ar: "أربعاء", xp: 0 },
+      { day: "Thu", day_ar: "خميس", xp: 20 },
+      { day: "Fri", day_ar: "جمعة", xp: 0 },
+      { day: "Sat", day_ar: "سبت", xp: 0 },
+    ],
+    discovered_cities: [],
+  },
+};
+
+export const getStudentStats = (studentId: string): StudentStats => {
+  return mockStudentStats[studentId] || {
+    student_id: studentId,
+    streak_days: 0,
+    last_activity_date: null,
+    achievements: [],
+    level_title: "مبتدئ",
+    level_title_ar: "مبتدئ",
+    skills: [],
+    weekly_activity: [],
+    discovered_cities: [],
+  };
+};

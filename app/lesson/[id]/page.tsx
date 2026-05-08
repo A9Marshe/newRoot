@@ -15,6 +15,7 @@ import { mockLessons } from "@/lib/mock";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import confetti from "canvas-confetti";
+import { XPAnimation } from "@/components/xp-animation";
 
 export default function LessonPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +28,7 @@ export default function LessonPage() {
   const [failCount, setFailCount] = useState(0);
   const [isAiHelpOpen, setIsAiHelpOpen] = useState(false);
   const [isLessonComplete, setIsLessonComplete] = useState(false);
+  const [showXP, setShowXP] = useState(false);
 
   if (!lesson) {
     return (
@@ -38,8 +40,20 @@ export default function LessonPage() {
     );
   }
 
-  const currentEx = lesson.content_json.exercises[currentExIndex];
-  const totalExercises = lesson.content_json.exercises.length;
+  const exercises = lesson.content_json.exercises || [];
+  
+  if (exercises.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f0f7f4] dark:bg-[#0a1a14] font-sans">
+        <p className="text-xl text-[#4a7c66] dark:text-[#a3d9be]">
+          لا توجد تمارين في هذا الدرس
+        </p>
+      </div>
+    );
+  }
+
+  const currentEx = exercises[currentExIndex];
+  const totalExercises = exercises.length;
   const progress = ((currentExIndex + 1) / totalExercises) * 100;
 
   const handleAnswer = (answer: string) => {
@@ -52,6 +66,9 @@ export default function LessonPage() {
     if (correct) {
       setScore((prev) => prev + 10);
       setFailCount(0);
+      
+      // Show XP animation
+      setShowXP(true);
       
       // Fire confetti for correct answer
       confetti({
@@ -253,6 +270,13 @@ export default function LessonPage() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* XP Animation */}
+        <XPAnimation
+          show={showXP}
+          xp={10}
+          onComplete={() => setShowXP(false)}
+        />
       </main>
     </div>
   );

@@ -3,11 +3,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { mockLessons, mockStudents } from "@/lib/mock";
+import { mockLessons, mockStudents, getStudentStats, getLevelTitle } from "@/lib/mock";
 import Link from "next/link";
 
 export default function LearnPage() {
   const student = mockStudents[0]; // Use first student for mock
+  const studentStats = getStudentStats(student.id);
+  const levelInfo = getLevelTitle(student.total_xp);
   const lessonsByLevel = mockLessons.reduce<Record<number, typeof mockLessons>>(
     (acc, lesson) => {
       if (!acc[lesson.level_index]) acc[lesson.level_index] = [];
@@ -24,9 +26,25 @@ export default function LearnPage() {
           <h1 className="text-3xl font-bold text-[#1a3c34] dark:text-[#b8e6d0]">
             مسار التعلم
           </h1>
-          <p className="text-[#4a7c66] dark:text-[#a3d9be] mt-2">
-            {student.name} - المستوى الحالي: {student.current_level === 0 ? "اختبار تحديد المستوى" : `المستوى ${student.current_level}`}
-          </p>
+          <div className="flex flex-wrap items-center gap-4 mt-2">
+            <p className="text-lg text-[#4a7c66] dark:text-[#a3d9be]">
+              <span className="font-bold">{student.name}</span> - {levelInfo.title_ar}
+            </p>
+            <div className="flex items-center gap-2 bg-[#d1e7dd] dark:bg-[#2d6a56] px-3 py-1 rounded-full">
+              <span className="text-lg">🔥</span>
+              <span className="font-bold text-[#1a3c34] dark:text-[#b8e6d0]">
+                {studentStats.streak_days}
+              </span>
+              <span className="text-sm text-[#4a7c66] dark:text-[#a3d9be]">أيام</span>
+            </div>
+            <div className="flex items-center gap-2 bg-[#d1e7dd] dark:bg-[#2d6a56] px-3 py-1 rounded-full">
+              <span className="text-lg">💎</span>
+              <span className="font-bold text-[#1a3c34] dark:text-[#b8e6d0]">
+                {student.total_xp}
+              </span>
+              <span className="text-sm text-[#4a7c66] dark:text-[#a3d9be]">XP</span>
+            </div>
+          </div>
         </header>
 
         {/* Level Nodes */}

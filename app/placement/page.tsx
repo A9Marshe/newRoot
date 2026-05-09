@@ -1,282 +1,280 @@
 "use client";
-
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Sparkle, ArrowLeft, ArrowRight, CheckCircle, Eye, Ear,
-  HandTap, PencilSimple, GlobeHemisphereEast, Brain,
-  ChartBar, MapPin, Books, Trophy
-} from "@phosphor-icons/react";
+import { JusoorLogo } from "@/components/ui/jusoor-logo";
+import { ArrowLeft, CheckCircle, Eye, Ear, HandTap, PencilSimple, Brain, MapPin, Trophy, Sparkle, ChartBar, Heart, Books, Star, GlobeHemisphereEast } from "@phosphor-icons/react";
 
-// ── Activity Types ──────────────────────────────────────────
-type ActivityType = "welcome" | "letter_tap" | "listen_pick" | "word_match" | "picture_label" | "sentence_order" | "culture_pick" | "profile";
+type Step = "intro" | "activity" | "analyzing" | "profile";
+type Activity = { id: string; type: string; category: string; data: any };
 
-type Activity = {
-  id: string;
-  type: ActivityType;
-  category: "reading" | "listening" | "writing" | "culture";
-  data: any;
-};
-
-type ProfileResult = {
-  readingLevel: number;
-  listeningLevel: number;
-  writingLevel: number;
-  cultureLevel: number;
-  recommendedCity: string;
-  personality: string;
-  personalityAr: string;
-  summary: string;
-};
-
-// ── Activity Data ───────────────────────────────────────────
 const activities: Activity[] = [
-  {
-    id: "a1", type: "letter_tap", category: "reading",
-    data: {
-      prompt: "اضغط على حرف الباء",
-      letters: ["أ", "ب", "ت", "ث", "ج"],
-      correct: "ب",
-    },
-  },
-  {
-    id: "a2", type: "listen_pick", category: "listening",
-    data: {
-      prompt: "ما الكلمة التي تسمعها؟",
-      hint: "🔊 شَمْس",
-      options: ["قمر", "شمس", "نجمة", "سماء"],
-      correct: "شمس",
-    },
-  },
-  {
-    id: "a3", type: "picture_label", category: "writing",
-    data: {
-      prompt: "ما اسم هذا باللغة العربية؟",
-      emoji: "🌊",
-      options: ["جبل", "بحر", "نهر", "صحراء"],
-      correct: "بحر",
-    },
-  },
-  {
-    id: "a4", type: "word_match", category: "reading",
-    data: {
-      prompt: "صل الكلمة بمعناها",
-      pairs: [
-        { word: "كتاب", match: "📖" },
-        { word: "شجرة", match: "🌳" },
-        { word: "بيت", match: "🏠" },
-      ],
-    },
-  },
-  {
-    id: "a5", type: "sentence_order", category: "writing",
-    data: {
-      prompt: "رتّب الكلمات لتكوين جملة صحيحة",
-      words: ["أحب", "أنا", "العربية", "اللغة"],
-      correct: ["أنا", "أحب", "اللغة", "العربية"],
-    },
-  },
-  {
-    id: "a6", type: "culture_pick", category: "culture",
-    data: {
-      prompt: "أين وُلدت أول أبجدية في التاريخ؟",
-      options: ["القاهرة", "أوغاريت", "بابل", "أثينا"],
-      correct: "أوغاريت",
-      fact: "أوغاريت مدينة سورية قديمة على ساحل اللاذقية، اخترعت فيها أول أبجدية عُرفت في التاريخ.",
-    },
-  },
+  { id:"a1", type:"letter_tap", category:"reading", data:{ prompt:"اضغط على الحرف الذي يبدأ به اسمك", letters:["ج","ي","ب","ت","م"], correct:"ي", hint:"ياسمين تبدأ بحرف..." }},
+  { id:"a2", type:"mcq", category:"listening", data:{ prompt:"استمع للكلمة واختر معناها 🔊 \"الوطن\"", options:["المدرسة","البيت الكبير","الأرض التي نحبها","المدينة"], correct:"الأرض التي نحبها" }},
+  { id:"a3", type:"mcq", category:"reading", data:{ prompt:"اقرأ الجملة واختر الكلمة الناقصة: \"سوريا بلد ___ وتاريخ عريق\"", options:["جميل","حضارة","كبير","بعيد"], correct:"حضارة" }},
+  { id:"a4", type:"picture_label", category:"vocabulary", data:{ prompt:"ماذا تسمى هذه بالعربية؟", emoji:"🌸", options:["وردة","زهرة الياسمين","شجرة","عشب"], correct:"زهرة الياسمين" }},
+  { id:"a5", type:"sentence_order", category:"grammar", data:{ prompt:"رتّب الكلمات لتكوين جملة مفيدة", words:["في","اللاذقية","ولدت","أنا"], correct:["أنا","ولدت","في","اللاذقية"] }},
+  { id:"a6", type:"mcq", category:"culture", data:{ prompt:"ما اسم المملكة السورية القديمة التي اخترعت أول أبجدية؟", options:["بابل","أوغاريت","كنعان","آشور"], correct:"أوغاريت", fact:"أوغاريت مدينة على ساحل اللاذقية، اخترعت فيها أول أبجدية حوالي 1400 ق.م" }},
+  { id:"a7", type:"mcq", category:"comprehension", data:{ prompt:"\"البحر صديق أهل الساحل\" — ما المقصود بهذه الجملة؟", options:["الناس يسبحون كثيراً","البحر يوفر الرزق والفرح لسكان الساحل","البحر خطير","الأسماك كثيرة"], correct:"البحر يوفر الرزق والفرح لسكان الساحل" }},
+  { id:"a8", type:"mcq", category:"expression", data:{ prompt:"كيف تعبّر عن شوقك لسوريا بجملة جميلة؟", options:["أريد أن أسافر","قلبي يحن إلى أرض الياسمين","سوريا بعيدة","لا أعرف"], correct:"قلبي يحن إلى أرض الياسمين" }},
 ];
 
-// ── Profile Generator ───────────────────────────────────────
-function generateProfile(scores: Record<string, number>): ProfileResult {
-  const r = scores.reading ?? 0;
-  const l = scores.listening ?? 0;
-  const w = scores.writing ?? 0;
-  const c = scores.culture ?? 0;
-  const total = r + l + w + c;
+type Profile = {
+  name: string; age: number; country: string; languages: string[]; hometown: string;
+  reading: number; listening: number; grammar: number; vocabulary: number;
+  comprehension: number; culture: number; expression: number;
+  personality: string; personalityAr: string; city: string;
+  dialect: string; learningStyle: string; emotionalConnection: string;
+  recommendedLevel: string; summary: string;
+  strengths: string[]; growthAreas: string[];
+  bilingualAdvantage: string; scriptFamiliarity: string;
+  culturalDistance: string; integrationContext: string;
+};
 
-  let personality = "The Explorer";
-  let personalityAr = "المستكشف الفضولي";
-  if (c >= 2) { personality = "The Heritage Keeper"; personalityAr = "حارس التراث"; }
-  else if (r >= 2) { personality = "The Bookworm"; personalityAr = "عاشق الكتب"; }
-  else if (l >= 1 && w >= 1) { personality = "The Communicator"; personalityAr = "المتواصل البارع"; }
+const langMap: Record<string,{script:string;advantage:string}> = {
+  "الألمانية":{script:"لاتيني — ستتعلم الكتابة من اليمين لليسار كمهارة جديدة",advantage:"التفكير المنظم من الألمانية سيساعدك في القواعد العربية"},
+  "الإنجليزية":{script:"لاتيني — ستحتاج تدريباً على اتجاه الكتابة العربية",advantage:"حصيلتك اللغوية الواسعة ستسرّع تعلم المفردات"},
+  "التركية":{script:"لاتيني — لكن لديك ميزة القرب الثقافي والمفردات المشتركة",advantage:"كلمات كثيرة مشتركة بين التركية والعربية ستسهل رحلتك"},
+  "الفرنسية":{script:"لاتيني — ستكتشف جمال الخط العربي كفن جديد",advantage:"الفرنسية علمتك التذوق اللغوي الذي سيثري تعبيرك بالعربية"},
+};
 
-  const city = c >= 2 ? "تدمر" : r >= 2 ? "دمشق" : l >= 1 ? "حلب" : "اللاذقية";
+const countryMap: Record<string,{distance:string;context:string}> = {
+  "ألمانيا":{distance:"بعد جغرافي كبير — لذلك RootBridge سيكون جسرك اليومي نحو سوريا",context:"مجتمع سوري نشط في ألمانيا، ستجد رفاقاً في الرحلة"},
+  "تركيا":{distance:"قرب جغرافي وثقافي — الكثير من المفردات والعادات مشتركة",context:"القرب من سوريا يعني فرصاً أكبر للتواصل المباشر مع الجذور"},
+  "السويد":{distance:"بعد جغرافي مع مجتمع سوري دافئ في الشمال",context:"ستتعلم العربية بينما تحافظ على تميزك الثقافي في السويد"},
+  "كندا":{distance:"عبر المحيط — لكن التكنولوجيا تقرّب المسافات",context:"مجتمع عربي متنوع في كندا سيدعم رحلتك"},
+};
+
+function generateProfile(name: string, age: number, scores: Record<string,number>, country: string, languages: string[], hometown: string): Profile {
+  const r = scores.reading||0, l = scores.listening||0, g = scores.grammar||0;
+  const v = scores.vocabulary||0, comp = scores.comprehension||0, cu = scores.culture||0, ex = scores.expression||0;
+  const total = r+l+g+v+comp+cu+ex;
+
+  let personality="المستكشف", personalityAr="المستكشف الفضولي";
+  if(cu>=1&&comp>=1){personality="Heritage Guardian";personalityAr="حارس التراث";}
+  else if(ex>=1&&comp>=1){personality="The Poet";personalityAr="الشاعر المبدع";}
+  else if(r>=1&&g>=1){personality="The Scholar";personalityAr="العالم الصغير";}
+  else if(v>=1&&l>=1){personality="The Listener";personalityAr="المستمع اليقظ";}
+
+  const city = hometown?`${hometown} — مدينتك الأصلية`:cu>=1?"اللاذقية — أوغاريت":comp>=1?"دمشق — قلب الشام":"حلب — مدينة العلم";
+  const dialect = ex>=1?"لديك حس لغوي طبيعي بالتعبير العامي والفصيح":"ستتعلم التمييز بين الفصحى والعامية السورية";
+  const learningStyle = comp>=1&&ex>=1?"تعلم تفاعلي عبر القصص والحوار":g>=1?"تعلم منظم مع قواعد واضحة":"تعلم بصري مع صور وأنشطة عملية";
+  const emotionalConnection = ex>=1?"ارتباط عاطفي قوي بالهوية السورية":cu>=1?"فضول ثقافي عميق تجاه التراث":"بداية واعدة لبناء جسر مع الجذور";
+  const recommendedLevel = total>=6?"متوسط متقدم":total>=3?"متوسط":"مبتدئ متحمس";
+
+  const mainLang = languages[0] || "الإنجليزية";
+  const langInfo = langMap[mainLang] || langMap["الإنجليزية"];
+  const countryInfo = countryMap[country] || {distance:"تجربة فريدة في المغترب — RootBridge سيكون رفيقك",context:"أينما كنت، الهوية السورية تسافر معك"};
+  const bilingualAdvantage = languages.length>=2
+    ? `ثنائي اللغة (${languages.join(" + ")}) — دماغك مهيأ لتعلم لغة ثالثة بسرعة مضاعفة!`
+    : `تتحدث ${mainLang} — ${langInfo.advantage}`;
+
+  const strengths: string[] = [];
+  const growth: string[] = [];
+  if(r>=1) strengths.push("التعرف على الحروف والقراءة"); else growth.push("القراءة الأساسية");
+  if(l>=1) strengths.push("فهم الكلمات المسموعة"); else growth.push("مهارات الاستماع");
+  if(g>=1) strengths.push("ترتيب الجمل والقواعد"); else growth.push("بناء الجمل");
+  if(v>=1) strengths.push("المفردات والمعاني"); else growth.push("توسيع المفردات");
+  if(comp>=1) strengths.push("الفهم والاستنتاج"); else growth.push("الفهم العميق");
+  if(cu>=1) strengths.push("المعرفة الثقافية السورية"); else growth.push("اكتشاف التراث");
+  if(ex>=1) strengths.push("التعبير العاطفي"); else growth.push("التعبير الشخصي");
 
   return {
-    readingLevel: Math.min(r, 3),
-    listeningLevel: Math.min(l, 3),
-    writingLevel: Math.min(w, 3),
-    cultureLevel: Math.min(c, 3),
-    recommendedCity: city,
-    personality, personalityAr,
-    summary: total >= 4
-      ? "مستوى ممتاز! لديك أساس قوي في اللغة العربية. سنبدأ معك من المستوى المتقدم."
-      : total >= 2
-      ? "بداية رائعة! أنت تعرف الأساسيات. سنبني معاً على ما تعرفه بالفعل."
-      : "أهلاً بك في رحلتك الأولى! سنبدأ معاً من البداية خطوة بخطوة.",
+    name,age,country,languages,hometown,
+    reading:r,listening:l,grammar:g,vocabulary:v,comprehension:comp,culture:cu,expression:ex,
+    personality,personalityAr,city,dialect,learningStyle,emotionalConnection,recommendedLevel,
+    bilingualAdvantage, scriptFamiliarity:langInfo.script,
+    culturalDistance:countryInfo.distance, integrationContext:countryInfo.context,
+    summary:`مرحباً ${name}! أنت "${personalityAr}" قادمة من ${country}. مستواك "${recommendedLevel}". ${emotionalConnection}. سنبدأ رحلتك من ${city}.`,
+    strengths, growthAreas: growth,
   };
 }
 
-// ── Main Component ──────────────────────────────────────────
 export default function PlacementPage() {
   const router = useRouter();
-  const [step, setStep] = useState<"welcome" | "activity" | "profile">("welcome");
+  const [step, setStep] = useState<Step>("intro");
+  const [name, setName] = useState(""); const [age, setAge] = useState("14"); const [hometown, setHometown] = useState("");
+  const [country, setCountry] = useState(""); const [knownLangs, setKnownLangs] = useState<string[]>([]);
   const [actIdx, setActIdx] = useState(0);
-  const [scores, setScores] = useState<Record<string, number>>({ reading: 0, listening: 0, writing: 0, culture: 0 });
-  const [selected, setSelected] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
-  const [matchedPairs, setMatchedPairs] = useState<string[]>([]);
+  const [scores, setScores] = useState<Record<string,number>>({});
+  const [selected, setSelected] = useState<string|null>(null);
+  const [feedback, setFeedback] = useState<"correct"|"wrong"|null>(null);
   const [orderedWords, setOrderedWords] = useState<string[]>([]);
-  const [profile, setProfile] = useState<ProfileResult | null>(null);
+  const [profile, setProfile] = useState<Profile|null>(null);
 
   const current = activities[actIdx];
-  const progress = step === "activity" ? ((actIdx + 1) / activities.length) * 100 : step === "profile" ? 100 : 0;
+  const progress = step==="activity"?((actIdx+1)/activities.length)*100:step==="profile"?100:0;
 
-  const advance = useCallback(() => {
-    if (actIdx < activities.length - 1) {
-      setActIdx(i => i + 1);
-      setSelected(null);
-      setFeedback(null);
-      setMatchedPairs([]);
-      setOrderedWords([]);
-    } else {
-      setProfile(generateProfile(scores));
-      setStep("profile");
-    }
-  }, [actIdx, scores]);
-
-  const handlePick = (answer: string, correctAnswer: string, category: string) => {
-    setSelected(answer);
-    const isCorrect = answer === correctAnswer;
-    setFeedback(isCorrect ? "correct" : "wrong");
-    if (isCorrect) setScores(s => ({ ...s, [category]: (s[category] ?? 0) + 1 }));
-    setTimeout(advance, 900);
+  const advance = () => {
+    if(actIdx<activities.length-1){setActIdx(i=>i+1);setSelected(null);setFeedback(null);setOrderedWords([]);}
+    else{setStep("analyzing");setTimeout(()=>{setProfile(generateProfile(name||"ياسمين",parseInt(age)||14,scores,country||"ألمانيا",knownLangs.length?knownLangs:["الألمانية"],hometown||"اللاذقية"));setStep("profile");},2500);}
   };
-
-  const handleMatch = (word: string) => {
-    if (matchedPairs.includes(word)) return;
-    setMatchedPairs(p => [...p, word]);
-    setScores(s => ({ ...s, reading: (s.reading ?? 0) + 1 }));
-    if (matchedPairs.length + 1 >= current.data.pairs.length) {
-      setFeedback("correct");
-      setTimeout(advance, 900);
+  const pick = (ans:string,correct:string,cat:string) => {
+    setSelected(ans);const ok=ans===correct;setFeedback(ok?"correct":"wrong");
+    if(ok)setScores(s=>({...s,[cat]:(s[cat]||0)+1}));setTimeout(advance,900);
+  };
+  const order = (w:string) => {
+    const next=[...orderedWords,w];setOrderedWords(next);
+    if(next.length>=current.data.correct.length){
+      const ok=next.every((x,i)=>x===current.data.correct[i]);
+      setFeedback(ok?"correct":"wrong");if(ok)setScores(s=>({...s,grammar:(s.grammar||0)+1}));setTimeout(advance,1200);
     }
   };
 
-  const handleOrder = (word: string) => {
-    const next = [...orderedWords, word];
-    setOrderedWords(next);
-    if (next.length >= current.data.correct.length) {
-      const isCorrect = next.every((w, i) => w === current.data.correct[i]);
-      setFeedback(isCorrect ? "correct" : "wrong");
-      if (isCorrect) setScores(s => ({ ...s, writing: (s.writing ?? 0) + 1 }));
-      setTimeout(advance, 1200);
-    }
-  };
-
-  // ── Welcome Screen ────────────────────────────────────────
-  if (step === "welcome") {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg w-full text-center space-y-10">
-          <div className="w-20 h-20 rounded-2xl bg-primary mx-auto flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/20">
-            <GlobeHemisphereEast size={40} weight="bold" />
+  // ── INTRO ─────────────────────
+  if(step==="intro") return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} className="max-w-md w-full space-y-10">
+        <div className="text-center space-y-4">
+          <JusoorLogo className="w-24 h-24 mx-auto" />
+          <h1 className="text-3xl font-black tracking-tight">مرحباً بك في جسور</h1>
+          <p className="text-muted-foreground font-medium leading-relaxed">أخبرنا عنك قليلاً حتى نصمم لك رحلة تعليمية فريدة</p>
+        </div>
+        <div className="space-y-5">
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">الاسم</Label>
+            <Input value={name} onChange={e=>setName(e.target.value)} placeholder="ياسمين" className="h-12 rounded-xl"/></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">العمر</Label>
+              <Input type="number" value={age} onChange={e=>setAge(e.target.value)} placeholder="14" className="h-12 rounded-xl"/></div>
+            <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">المدينة الأصلية في سوريا</Label>
+              <Input value={hometown} onChange={e=>setHometown(e.target.value)} placeholder="اللاذقية" className="h-12 rounded-xl"/></div>
           </div>
-          <div className="space-y-4">
-            <h1 className="text-4xl font-black tracking-tight">اكتشف مستواك</h1>
-            <p className="text-muted-foreground font-medium text-lg leading-relaxed">
-              رحلة قصيرة من ٦ أنشطة متنوعة لنتعرف على مهاراتك ونبني لك خطة تعليمية مخصصة بالذكاء الاصطناعي.
-            </p>
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">بلد الإقامة الحالي</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {["ألمانيا","تركيا","السويد","كندا"].map(c=>(
+                <button key={c} onClick={()=>setCountry(c)} className={cn("p-3 rounded-xl border-2 font-black text-xs transition-all",country===c?"bg-primary text-white border-primary":"bg-white border-border hover:border-primary/30")}>{c}</button>
+              ))}
+            </div>
+            {!["ألمانيا","تركيا","السويد","كندا"].includes(country) && (
+              <Input value={country} onChange={e=>setCountry(e.target.value)} placeholder="أو اكتب البلد..." className="h-10 rounded-xl text-sm mt-2"/>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto text-right">
-            {[
-              { icon: Eye, label: "قراءة" },
-              { icon: Ear, label: "استماع" },
-              { icon: PencilSimple, label: "كتابة" },
-              { icon: MapPin, label: "ثقافة" },
-            ].map((s, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
-                <s.icon size={20} weight="duotone" className="text-primary" />
-                <span className="text-xs font-black">{s.label}</span>
-              </div>
-            ))}
+          <div className="space-y-2"><Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">اللغات التي تتحدثها</Label>
+            <div className="flex flex-wrap gap-2">
+              {["الألمانية","الإنجليزية","التركية","الفرنسية"].map(lang=>(
+                <button key={lang} onClick={()=>setKnownLangs(prev=>prev.includes(lang)?prev.filter(l=>l!==lang):[...prev,lang])}
+                  className={cn("px-4 py-2.5 rounded-xl border-2 font-black text-xs transition-all",knownLangs.includes(lang)?"bg-primary text-white border-primary":"bg-white border-border hover:border-primary/30")}>
+                  {lang}
+                </button>
+              ))}
+            </div>
           </div>
-          <Button size="lg" className="h-14 px-12 rounded-xl font-black text-lg gap-3 shadow-xl shadow-primary/10 group" onClick={() => setStep("activity")}>
-            هيا نبدأ <ArrowLeft size={20} weight="bold" className="group-hover:-translate-x-1 transition-transform" />
+        </div>
+        <div className="space-y-4">
+          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-center">٨ أنشطة متنوعة • ٣ دقائق</p>
+          <Button size="lg" className="w-full h-14 rounded-xl font-black text-lg gap-3 shadow-xl shadow-primary/10 group"
+            onClick={()=>{if(name.trim())setStep("activity");}}>
+            ابدأ الاكتشاف <ArrowLeft size={20} weight="bold" className="group-hover:-translate-x-1 transition-transform"/>
           </Button>
-        </motion.div>
-      </div>
-    );
-  }
+        </div>
+      </motion.div>
+    </div>
+  );
 
-  // ── Profile Result Screen ─────────────────────────────────
-  if (step === "profile" && profile) {
-    const skills = [
-      { label: "القراءة", level: profile.readingLevel, icon: Eye },
-      { label: "الاستماع", level: profile.listeningLevel, icon: Ear },
-      { label: "الكتابة", level: profile.writingLevel, icon: PencilSimple },
-      { label: "الثقافة", level: profile.cultureLevel, icon: MapPin },
+  // ── ANALYZING ─────────────────
+  if(step==="analyzing") return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <motion.div initial={{opacity:0}} animate={{opacity:1}} className="text-center space-y-8">
+        <motion.div animate={{rotate:360}} transition={{duration:2,repeat:Infinity,ease:"linear"}}
+          className="w-20 h-20 rounded-full border-4 border-primary/20 border-t-primary mx-auto"/>
+        <div className="space-y-3">
+          <h2 className="text-2xl font-black">الذكاء الاصطناعي يحلل إجاباتك...</h2>
+          <p className="text-muted-foreground font-medium">نبني ملفك التعليمي المخصص</p>
+        </div>
+      </motion.div>
+    </div>
+  );
+
+  // ── PROFILE ───────────────────
+  if(step==="profile"&&profile) {
+    const axes = [
+      {label:"القراءة",val:profile.reading,icon:Eye,max:1},
+      {label:"الاستماع",val:profile.listening,icon:Ear,max:1},
+      {label:"القواعد",val:profile.grammar,icon:PencilSimple,max:1},
+      {label:"المفردات",val:profile.vocabulary,icon:Books,max:1},
+      {label:"الفهم",val:profile.comprehension,icon:Brain,max:1},
+      {label:"الثقافة",val:profile.culture,icon:MapPin,max:1},
+      {label:"التعبير",val:profile.expression,icon:Heart,max:1},
     ];
     return (
       <div className="min-h-screen bg-background p-6 flex items-center justify-center">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6 }} className="max-w-2xl w-full space-y-10">
-          <div className="text-center space-y-4">
+        <motion.div initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} transition={{duration:0.6}} className="max-w-2xl w-full space-y-8">
+          <div className="text-center space-y-3">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-primary">
-              <Brain size={16} weight="fill" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">تحليل الذكاء الاصطناعي</span>
+              <Brain size={16} weight="fill"/><span className="text-[10px] font-black uppercase tracking-[0.2em]">تحليل AI مخصص</span>
             </div>
-            <h1 className="text-4xl font-black tracking-tight">ملفك التعليمي جاهز</h1>
+            <h1 className="text-3xl font-black tracking-tight">ملف {profile.name} التعليمي</h1>
           </div>
 
-          {/* Personality Card */}
-          <div className="bg-foreground text-background rounded-[2rem] p-10 text-center space-y-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 rounded-bl-full opacity-20" />
-            <Trophy size={48} weight="fill" className="text-primary mx-auto" />
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-background/50 mb-2">شخصيتك التعليمية</p>
-              <h2 className="text-3xl font-black">{profile.personalityAr}</h2>
-              <p className="text-sm font-bold text-background/60 mt-1">{profile.personality}</p>
-            </div>
-            <p className="text-background/70 font-medium max-w-md mx-auto leading-relaxed">{profile.summary}</p>
+          {/* Personality */}
+          <div className="bg-foreground text-background rounded-[2rem] p-8 text-center space-y-4 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-bl-full opacity-20"/>
+            <Trophy size={40} weight="fill" className="text-primary mx-auto"/>
+            <p className="text-[10px] font-black uppercase tracking-widest text-background/50">شخصيتك التعليمية</p>
+            <h2 className="text-3xl font-black">{profile.personalityAr}</h2>
+            <p className="text-xs font-bold text-background/50">{profile.personality}</p>
+            <p className="text-background/70 font-medium text-sm max-w-md mx-auto leading-relaxed">{profile.summary}</p>
           </div>
 
-          {/* Skills Grid */}
-          <div className="grid grid-cols-2 gap-6">
-            {skills.map((s, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white border border-border/50 card-shadow space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <s.icon size={20} weight="duotone" className="text-primary" />
-                    <span className="font-black text-sm">{s.label}</span>
-                  </div>
-                  <span className="text-[10px] font-black text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{s.level}/3</span>
-                </div>
-                <div className="flex gap-1.5">
-                  {[1, 2, 3].map(n => (
-                    <div key={n} className={cn("h-2 flex-1 rounded-full", n <= s.level ? "bg-primary" : "bg-muted")} />
-                  ))}
-                </div>
+          {/* 7-Axis Skills */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {axes.map((a,i)=>(
+              <div key={i} className="p-4 rounded-2xl bg-white border border-border/50 card-shadow text-center space-y-3">
+                <a.icon size={20} weight="duotone" className="text-primary mx-auto"/>
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{a.label}</p>
+                <div className="flex gap-1 justify-center">{[1].map(n=>(
+                  <div key={n} className={cn("h-2 w-full rounded-full",a.val>=n?"bg-primary":"bg-muted")}/>
+                ))}</div>
               </div>
             ))}
           </div>
 
-          {/* Recommended City */}
-          <div className="p-6 rounded-2xl border border-border/50 bg-primary/[0.03] flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-primary/10 text-primary"><MapPin size={24} weight="fill" /></div>
-              <div>
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">المدينة الموصى بها</p>
-                <p className="text-xl font-black">{profile.recommendedCity}</p>
+          {/* Inferred Anchor Points */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              {label:"المستوى الموصى",value:profile.recommendedLevel,icon:ChartBar},
+              {label:"المدينة الأولى",value:profile.city.split("—")[0],icon:MapPin},
+              {label:"أسلوب التعلم",value:profile.learningStyle,icon:Star},
+              {label:"الارتباط العاطفي",value:profile.emotionalConnection,icon:Heart},
+              {label:"الميزة اللغوية",value:profile.bilingualAdvantage,icon:Books},
+              {label:"نظام الكتابة",value:profile.scriptFamiliarity,icon:PencilSimple},
+              {label:"البعد الجغرافي",value:profile.culturalDistance,icon:GlobeHemisphereEast},
+              {label:"سياق الاندماج",value:profile.integrationContext,icon:Brain},
+            ].map((item,i)=>(
+              <div key={i} className="p-5 rounded-2xl border border-border/50 bg-white card-shadow flex items-start gap-4">
+                <div className="p-2 rounded-lg bg-primary/5 text-primary shrink-0"><item.icon size={20} weight="duotone"/></div>
+                <div><p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">{item.label}</p>
+                  <p className="font-bold text-sm leading-relaxed">{item.value}</p></div>
               </div>
-            </div>
-            <Sparkle size={24} className="text-primary" />
+            ))}
           </div>
 
-          <Button size="lg" className="w-full h-14 rounded-xl font-black text-lg shadow-xl shadow-primary/10" onClick={() => router.push("/dashboard")}>
+          {/* Strengths & Growth */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl border border-primary/10 bg-primary/[0.03] space-y-3">
+              <p className="text-[9px] font-black text-primary uppercase tracking-widest">نقاط القوة</p>
+              {profile.strengths.map((s,i)=><p key={i} className="text-xs font-bold flex items-center gap-2"><CheckCircle size={14} weight="fill" className="text-primary"/>{s}</p>)}
+            </div>
+            <div className="p-5 rounded-2xl border border-secondary/10 bg-secondary/[0.03] space-y-3">
+              <p className="text-[9px] font-black text-secondary-foreground uppercase tracking-widest">مجالات النمو</p>
+              {profile.growthAreas.map((s,i)=><p key={i} className="text-xs font-bold flex items-center gap-2"><Sparkle size={14} weight="fill" className="text-secondary-foreground"/>{s}</p>)}
+            </div>
+          </div>
+
+          {/* Dialect & Context note */}
+          <div className="p-5 rounded-xl bg-muted/30 border border-border/50 space-y-2 text-center">
+            <p className="text-xs font-bold text-muted-foreground">{profile.dialect}</p>
+            <p className="text-[10px] font-semibold text-muted-foreground/70">
+              {profile.name}، عمرك {profile.age} سنة • من {profile.hometown || "سوريا"} • تقيم في {profile.country}
+            </p>
+          </div>
+
+          <Button size="lg" className="w-full h-14 rounded-xl font-black text-lg shadow-xl shadow-primary/10"
+            onClick={()=>router.push("/dashboard")}>
             انطلق في رحلتك التعليمية
           </Button>
         </motion.div>
@@ -284,136 +282,94 @@ export default function PlacementPage() {
     );
   }
 
-  // ── Activity Screen ───────────────────────────────────────
+  // ── ACTIVITY ──────────────────
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Top Bar */}
       <header className="max-w-3xl mx-auto w-full px-6 pt-8 space-y-4">
         <div className="flex items-center justify-between text-xs font-black text-muted-foreground uppercase tracking-widest">
-          <span>النشاط {actIdx + 1} / {activities.length}</span>
-          <span className="flex items-center gap-2"><Sparkle size={14} weight="fill" className="text-primary" /> تحديد المستوى</span>
+          <span>{actIdx+1} / {activities.length}</span>
+          <span className="flex items-center gap-2"><Sparkle size={14} weight="fill" className="text-primary"/>تحديد المستوى</span>
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-          <motion.div animate={{ width: `${progress}%` }} className="h-full bg-primary rounded-full" transition={{ duration: 0.4 }} />
+          <motion.div animate={{width:`${progress}%`}} className="h-full bg-primary rounded-full" transition={{duration:0.4}}/>
         </div>
       </header>
-
-      {/* Activity Content */}
       <main className="flex-1 flex items-center justify-center p-6">
         <AnimatePresence mode="wait">
-          <motion.div key={current.id} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="max-w-xl w-full space-y-10">
-            {/* Category Badge */}
+          <motion.div key={current.id} initial={{opacity:0,x:30}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-30}} className="max-w-xl w-full space-y-8">
             <div className="flex items-center gap-3">
-              <div className={cn("p-2 rounded-lg", current.category === "reading" ? "bg-primary/10 text-primary" : current.category === "listening" ? "bg-orange-500/10 text-orange-600" : current.category === "culture" ? "bg-secondary/10 text-secondary-foreground" : "bg-green-500/10 text-green-600")}>
-                {current.category === "reading" ? <Eye size={20} /> : current.category === "listening" ? <Ear size={20} /> : current.category === "culture" ? <MapPin size={20} /> : <PencilSimple size={20} />}
+              <div className={cn("p-2 rounded-lg",
+                current.category==="reading"?"bg-primary/10 text-primary":
+                current.category==="listening"?"bg-orange-500/10 text-orange-600":
+                current.category==="culture"?"bg-secondary/10 text-secondary-foreground":
+                "bg-green-500/10 text-green-600")}>
+                {current.category==="reading"?<Eye size={20}/>:current.category==="listening"?<Ear size={20}/>:
+                current.category==="culture"?<MapPin size={20}/>:<PencilSimple size={20}/>}
               </div>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                {current.category === "reading" ? "قراءة" : current.category === "listening" ? "استماع" : current.category === "culture" ? "ثقافة" : "كتابة"}
+                {({reading:"قراءة",listening:"استماع",grammar:"قواعد",vocabulary:"مفردات",comprehension:"فهم",culture:"ثقافة",expression:"تعبير"} as any)[current.category]||current.category}
               </span>
             </div>
+            <h2 className="text-2xl font-black tracking-tight leading-snug">{current.data.prompt}</h2>
 
-            {/* Prompt */}
-            <h2 className="text-3xl font-black tracking-tight leading-snug">{current.data.prompt}</h2>
-
-            {/* Hint for listening */}
-            {current.type === "listen_pick" && (
-              <div className="p-6 rounded-2xl bg-muted/30 border border-border/50 text-center">
-                <p className="text-4xl">{current.data.hint}</p>
-              </div>
+            {current.data.hint && current.type!=="letter_tap" && (
+              <div className="p-5 rounded-2xl bg-muted/30 border border-border/50 text-center text-xl font-bold">{current.data.hint}</div>
             )}
-
-            {/* Emoji for picture_label */}
-            {current.type === "picture_label" && (
-              <div className="w-32 h-32 rounded-3xl bg-muted/30 border border-border/50 flex items-center justify-center mx-auto">
-                <span className="text-6xl">{current.data.emoji}</span>
-              </div>
+            {current.type==="picture_label" && (
+              <div className="w-28 h-28 rounded-3xl bg-muted/30 border border-border/50 flex items-center justify-center mx-auto"><span className="text-5xl">{current.data.emoji}</span></div>
             )}
-
-            {/* Letter Tap */}
-            {current.type === "letter_tap" && (
-              <div className="flex gap-4 justify-center flex-wrap">
-                {current.data.letters.map((l: string) => (
-                  <button key={l} disabled={!!feedback} onClick={() => handlePick(l, current.data.correct, current.category)}
-                    className={cn("w-20 h-20 rounded-2xl text-3xl font-black border-2 transition-all",
-                      selected === l && feedback === "correct" ? "bg-primary text-white border-primary scale-110" :
-                      selected === l && feedback === "wrong" ? "bg-destructive text-white border-destructive" :
-                      "bg-white border-border hover:border-primary/30 hover:shadow-lg"
-                    )}>
-                    {l}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* MCQ Options (listen_pick, picture_label, culture_pick) */}
-            {(current.type === "listen_pick" || current.type === "picture_label" || current.type === "culture_pick") && (
-              <div className="grid grid-cols-2 gap-4">
-                {current.data.options.map((opt: string) => (
-                  <button key={opt} disabled={!!feedback} onClick={() => handlePick(opt, current.data.correct, current.category)}
-                    className={cn("p-5 rounded-2xl font-black text-lg border-2 transition-all text-center",
-                      selected === opt && feedback === "correct" ? "bg-primary text-white border-primary" :
-                      selected === opt && feedback === "wrong" ? "bg-destructive text-white border-destructive" :
-                      "bg-white border-border hover:border-primary/30 hover:shadow-lg"
-                    )}>
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Word Match */}
-            {current.type === "word_match" && (
-              <div className="space-y-4">
-                {current.data.pairs.map((p: any) => (
-                  <button key={p.word} disabled={matchedPairs.includes(p.word)} onClick={() => handleMatch(p.word)}
-                    className={cn("w-full p-5 rounded-2xl border-2 flex items-center justify-between font-black text-lg transition-all",
-                      matchedPairs.includes(p.word) ? "bg-primary/5 border-primary/20 text-primary" : "bg-white border-border hover:border-primary/30"
-                    )}>
-                    <span>{p.word}</span>
-                    <span className="text-2xl">{p.match}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Sentence Order */}
-            {current.type === "sentence_order" && (
-              <div className="space-y-6">
-                <div className="min-h-[60px] p-4 rounded-2xl border-2 border-dashed border-border bg-muted/20 flex gap-3 flex-wrap items-center">
-                  {orderedWords.map((w, i) => (
-                    <span key={i} className="px-4 py-2 rounded-xl bg-primary text-white font-black text-sm">{w}</span>
+            {current.type==="letter_tap" && (
+              <div>
+                {current.data.hint && <p className="text-sm text-muted-foreground font-semibold mb-4 text-center">{current.data.hint}</p>}
+                <div className="flex gap-4 justify-center flex-wrap">
+                  {current.data.letters.map((l:string)=>(
+                    <button key={l} disabled={!!feedback} onClick={()=>pick(l,current.data.correct,current.category)}
+                      className={cn("w-20 h-20 rounded-2xl text-3xl font-black border-2 transition-all",
+                        selected===l&&feedback==="correct"?"bg-primary text-white border-primary scale-110":
+                        selected===l&&feedback==="wrong"?"bg-destructive text-white border-destructive":
+                        "bg-white border-border hover:border-primary/30 hover:shadow-lg")}>{l}</button>
                   ))}
-                  {orderedWords.length === 0 && <span className="text-muted-foreground text-sm font-medium">اضغط على الكلمات بالترتيب الصحيح...</span>}
+                </div>
+              </div>
+            )}
+            {(current.type==="mcq"||current.type==="picture_label") && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {current.data.options.map((o:string)=>(
+                  <button key={o} disabled={!!feedback} onClick={()=>pick(o,current.data.correct,current.category)}
+                    className={cn("p-4 rounded-2xl font-black border-2 transition-all text-right",
+                      selected===o&&feedback==="correct"?"bg-primary text-white border-primary":
+                      selected===o&&feedback==="wrong"?"bg-destructive text-white border-destructive":
+                      "bg-white border-border hover:border-primary/30 hover:shadow-lg")}>{o}</button>
+                ))}
+              </div>
+            )}
+            {current.type==="sentence_order" && (
+              <div className="space-y-5">
+                <div className="min-h-[56px] p-4 rounded-2xl border-2 border-dashed border-border bg-muted/20 flex gap-2 flex-wrap items-center">
+                  {orderedWords.map((w,i)=>(<span key={i} className="px-3 py-1.5 rounded-lg bg-primary text-white font-black text-sm">{w}</span>))}
+                  {orderedWords.length===0&&<span className="text-muted-foreground text-xs font-medium">اضغط على الكلمات بالترتيب...</span>}
                 </div>
                 <div className="flex gap-3 flex-wrap justify-center">
-                  {current.data.words.map((w: string) => (
-                    <button key={w} disabled={orderedWords.includes(w) || !!feedback} onClick={() => handleOrder(w)}
-                      className={cn("px-5 py-3 rounded-xl font-black border-2 transition-all",
-                        orderedWords.includes(w) ? "opacity-30 border-transparent" : "bg-white border-border hover:border-primary/30 hover:shadow-lg"
-                      )}>
-                      {w}
-                    </button>
+                  {current.data.words.map((w:string)=>(
+                    <button key={w} disabled={orderedWords.includes(w)||!!feedback} onClick={()=>order(w)}
+                      className={cn("px-4 py-2.5 rounded-xl font-black border-2 transition-all text-sm",
+                        orderedWords.includes(w)?"opacity-30 border-transparent":"bg-white border-border hover:border-primary/30 hover:shadow-lg")}>{w}</button>
                   ))}
                 </div>
               </div>
             )}
-
-            {/* Feedback */}
             <AnimatePresence>
-              {feedback && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              {feedback&&(
+                <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0}}
                   className={cn("p-4 rounded-xl flex items-center gap-3 font-black text-sm",
-                    feedback === "correct" ? "bg-primary/5 text-primary border border-primary/10" : "bg-destructive/5 text-destructive border border-destructive/10"
-                  )}>
-                  {feedback === "correct" ? <CheckCircle size={20} weight="fill" /> : <span>✕</span>}
-                  {feedback === "correct" ? "أحسنت! إجابة صحيحة" : "حاول مجدداً في المرة القادمة"}
+                    feedback==="correct"?"bg-primary/5 text-primary border border-primary/10":"bg-destructive/5 text-destructive border border-destructive/10")}>
+                  {feedback==="correct"?<CheckCircle size={20} weight="fill"/>:<span>✕</span>}
+                  {feedback==="correct"?"أحسنت!":"لا بأس، سنعمل على هذا معاً"}
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Culture Fact */}
-            {feedback === "correct" && current.type === "culture_pick" && current.data.fact && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-5 rounded-2xl bg-secondary/5 border border-secondary/10 text-sm font-semibold text-foreground/80 leading-relaxed">
+            {feedback==="correct"&&current.data.fact&&(
+              <motion.div initial={{opacity:0}} animate={{opacity:1}} className="p-4 rounded-xl bg-secondary/5 border border-secondary/10 text-xs font-semibold leading-relaxed">
                 💡 {current.data.fact}
               </motion.div>
             )}

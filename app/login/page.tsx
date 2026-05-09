@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { JusoorLogo } from "@/components/ui/jusoor-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,9 +23,12 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-[#f0f7f4] dark:bg-[#0a1a14] p-4">
       <Card className="w-full max-w-md border-[#d1e7dd] dark:border-[#2d6a56] shadow-sm">
         <CardHeader className="text-center gap-2">
-          <CardTitle className="text-2xl font-bold text-[#1a3c34] dark:text-[#b8e6d0]">
-            تسجيل الدخول
-          </CardTitle>
+          <div className="flex flex-col items-center gap-4">
+            <JusoorLogo className="w-20 h-20" />
+            <CardTitle className="text-2xl font-black text-primary">
+              جسور
+            </CardTitle>
+          </div>
           <CardDescription className="text-[#4a7c66] dark:text-[#a3d9be]">
             أدخل بياناتك للوصول إلى لوحة التحكم
           </CardDescription>

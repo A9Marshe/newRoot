@@ -19,8 +19,8 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "RootBridge | تعلم العربية للأطفال",
-  description: "منصة تعليمية للأطفال المغتربين لتعلم العربية والاندماج في النظام التعليمي",
+  title: "جسور | هويتك، لغتك، جذورك",
+  description: "منصة جسور التعليمية للأطفال المغتربين لتعلم العربية والاندماج في الثقافة السورية العريقة.",
 };
 
 export default function RootLayout({

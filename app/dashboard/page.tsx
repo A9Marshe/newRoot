@@ -20,6 +20,7 @@ import { TutorActionPanel } from "@/components/dashboard/tutor-action-panel";
 import { CityDiscovery } from "@/components/dashboard/city-discovery";
 import { StoryReader } from "@/components/dashboard/story-reader";
 import { BadgeList, BadgeDisplay } from "@/components/badge-display";
+import { JusoorLogo } from "@/components/ui/jusoor-logo";
 import { 
   Users, 
   Student, 
@@ -30,7 +31,6 @@ import {
   GraduationCap, 
   ChartBar,
   Compass,
-  GlobeHemisphereEast,
   SignOut
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
@@ -55,10 +55,8 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground shadow-lg">
-                <GlobeHemisphereEast size={20} weight="bold" />
-              </div>
-              <span className="text-lg font-black tracking-tighter uppercase">RootBridge</span>
+              <JusoorLogo className="w-10 h-10" />
+              <span className="text-xl font-black tracking-tighter text-primary">جسور</span>
             </div>
             <nav className="hidden md:flex items-center gap-1 p-1 bg-muted/50 rounded-xl">
               {[

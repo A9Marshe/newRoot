@@ -28,43 +28,41 @@ export function StatCard({
   return (
     <Card
       className={cn(
-        "border-2 border-border shadow-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary/20 rounded-[2rem]",
+        "border border-border/50 bg-white card-shadow rounded-2xl overflow-hidden transition-all duration-300",
         variant === "vibrant"
-          ? "bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20"
+          ? "bg-gradient-to-br from-primary/[0.03] to-primary/[0.08] border-primary/20"
           : "bg-white",
         className
       )}
     >
-      <CardHeader className="flex flex-row items-center justify-between pb-3 space-y-0">
-        <CardTitle className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+      <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
+        <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
           {title}
         </CardTitle>
-        <div className="text-primary/60 p-2 rounded-xl bg-primary/5">
+        <div className="text-primary/70 p-2 rounded-lg bg-primary/5">
           {icon}
         </div>
       </CardHeader>
       <CardContent>
         <div className="flex items-baseline gap-2">
-          <div className="text-3xl font-black tracking-tighter text-foreground">
+          <div className="text-2xl font-black tracking-tight text-foreground">
             {value}
           </div>
           {label && (
-            <div className="text-[10px] text-muted-foreground font-black uppercase tracking-tight">
+            <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
               {label}
             </div>
           )}
         </div>
         {trend && (
-          <div className="mt-4 flex items-center gap-2 px-2 py-1 rounded-lg bg-green-500/5 w-fit border border-green-500/10">
-            <span
-              className={cn(
-                "text-[10px] font-black",
-                trend.isUp ? "text-green-600" : "text-destructive"
-              )}
-            >
+          <div className="mt-4 flex items-center gap-2">
+            <div className={cn(
+              "px-1.5 py-0.5 rounded text-[9px] font-black border",
+              trend.isUp ? "bg-green-500/5 text-green-600 border-green-500/10" : "bg-destructive/5 text-destructive border-destructive/10"
+            )}>
               {trend.isUp ? "↑" : "↓"} {trend.value}
-            </span>
-            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-tighter">
+            </div>
+            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-tight">
               نمو مستمر
             </span>
           </div>
